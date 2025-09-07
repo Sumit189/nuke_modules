@@ -194,7 +194,7 @@ scanBtn.addEventListener('click', async () => {
 deleteBtn.addEventListener('click', async () => {
   const targets = items.filter(x => x.selected);
   if (!targets.length) return;
-  if (!confirm(`Delete ${targets.length} node_modules directories?`)) return;
+  if (!confirm(`Delete ${targets.length} node_modules folders and package-lock.json?`)) return;
   deleteBtn.disabled = true;
   try {
     const failed = [];
@@ -205,7 +205,7 @@ deleteBtn.addEventListener('click', async () => {
     items = items.filter(x => !x.selected);
     render();
     if (failed.length) showToast(`Some deletions failed (${failed.length}). Check permissions.`, 'error');
-    else showToast('Deleted selected node_modules', 'success');
+    else showToast('Deleted node_modules and package-lock.json', 'success');
   } catch (e) { showToast('Delete failed', 'error'); }
   finally { deleteBtn.disabled = false; }
 });
@@ -216,28 +216,40 @@ async function writeTextFile(dirHandle, name, text) { const fh = await dirHandle
 
 // Deletion helpers
 async function removeDirContents(dirHandle) {
-  for await (const entry of dirHandle.values()) {
-    if (entry.kind === 'directory') {
-      // Try recursive remove first
-      try { await dirHandle.removeEntry(entry.name, { recursive: true }); continue; } catch {}
-      // Manual descend
-      const sub = await dirHandle.getDirectoryHandle(entry.name);
-      await removeDirContents(sub);
-      try { await dirHandle.removeEntry(entry.name); } catch {}
-    } else {
-      try { await dirHandle.removeEntry(entry.name); } catch {}
+  // Snapshot entries to avoid iterator invalidation while deleting
+  let attempts = 0;
+  while (attempts < 3) {
+    const entries = [];
+    for await (const entry of dirHandle.values()) entries.push(entry);
+    if (entries.length === 0) return;
+    for (const entry of entries) {
+      if (entry.kind === 'directory') {
+        try { await dirHandle.removeEntry(entry.name, { recursive: true }); continue; } catch {}
+        try { const sub = await dirHandle.getDirectoryHandle(entry.name); await removeDirContents(sub); } catch {}
+        try { await dirHandle.removeEntry(entry.name); } catch {}
+      } else {
+        try { await dirHandle.removeEntry(entry.name); } catch {}
+      }
     }
+    attempts++;
   }
 }
 async function deleteNodeModulesByProjectPath(projectPath) {
   try {
     const projectDir = await getProjectDirHandleByPathLike(projectPath);
-    // Fast path
-    try { await projectDir.removeEntry('node_modules', { recursive: true }); return true; } catch {}
-    // Fallback: clear and remove
-    const nm = await projectDir.getDirectoryHandle('node_modules', { create: false });
-    await removeDirContents(nm);
-    try { await projectDir.removeEntry('node_modules'); } catch {}
+    // Attempt recursive removal first
+    try { await projectDir.removeEntry('node_modules', { recursive: true }); }
+    catch {
+      // Fallback: deep-clean contents then remove directory
+      try {
+        const nm = await projectDir.getDirectoryHandle('node_modules', { create: false });
+        await removeDirContents(nm);
+        try { await projectDir.removeEntry('node_modules'); } catch {}
+        // Final retry with recursive in case of late writers/hidden dirs
+        try { await projectDir.removeEntry('node_modules', { recursive: true }); } catch {}
+      } catch {}
+    }
+    try { await projectDir.removeEntry('package-lock.json'); } catch {}
     return true;
   } catch (e) {
     return false;
@@ -268,7 +280,7 @@ cmdk.addEventListener('click', (e) => { if (e.target === cmdk) closeCmdk(); });
 const commands = [
   { id: 'pick', label: 'Pick root folder', run: () => pickRootBtn.click() },
   { id: 'scan', label: 'Scan for node_modules', run: () => scanBtn.click() },
-  { id: 'delete', label: 'Delete selected node_modules', run: () => deleteBtn.click() },
+  { id: 'delete', label: 'Delete selected node_modules + package-lock.json', run: () => deleteBtn.click() },
   { id: 'prep', label: 'Prepare selected projects for pnpm', run: () => prepPnpmBtn.click() },
   { id: 'focus-search', label: 'Focus search', run: () => { searchInput.focus(); } },
 ];
