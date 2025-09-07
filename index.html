@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>nuke_modules</title>
+    <meta name="theme-color" content="#69A5A1" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="assets/logo.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="top-loader" id="topLoader"></div>
+    <div class="container">
+      <header id="appHeader">
+        <div class="brand">
+          <div class="logo">
+            <img src="assets/logo.png" alt="logo" />
+          </div>
+          <div>nuke_modules</div>
+          <span class="chip" id="summary" style="margin-left:6px;">Ready</span>
+        </div>
+        <div class="search" style="justify-self:center;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4-4"/></svg>
+          <input id="searchInput" placeholder="Search projects… (/)" />
+          <span class="kbd">/</span>
+        </div>
+        <div class="toolbar">
+          <button class="secondary icon" id="pickRoot"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h5l2 3h11v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M3 7V5a2 2 0 0 1 2-2h3l2 2h11"/></svg>Pick root</button>
+          <button class="primary icon" id="scanBtn" aria-busy="false"><span class="spinner" id="scanSpin"></span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M22 22l-4-4"/></svg><span id="scanLabel" style="margin-left:8px;">Scan</span></button>
+          <button class="ghost icon" id="cmdkBtn" title="Command palette (⌘K)"><span class="kbd">⌘K</span></button>
+      </div>
+    </header>
+
+      <div class="card">
+        <div class="card-head" id="cardHead">
+          <div class="actions">
+            <button class="danger icon" id="deleteBtn" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>Delete</button>
+            <button class="secondary icon" id="prepPnpmBtn" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16 16l4 4-4 4"/><rect x="2" y="4" width="14" height="14" rx="2"/></svg>Prepare pnpm</button>
+            <span class="subtitle" id="selectionHint"></span>
+          </div>
+          <label class="subtitle" style="display:flex; align-items:center; gap:8px;">
+            <input id="selectAll" type="checkbox" /> Select all
+          </label>
+    </div>
+        <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+                <th style="width:42px"></th>
+            <th>Project</th>
+            <th>node_modules</th>
+                <th style="width:160px">Size</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+      </div>
+    </div>
+
+    <div class="footer-note">Works best in Chromium-based browsers (Chrome, Edge, Brave) with the File System Access API enabled.</div>
+
+    <div class="toasts" id="toasts"></div>
+
+    <div class="cmdk" id="cmdk">
+      <div class="cmdk-panel">
+        <div class="cmdk-head">
+          <input id="cmdkInput" placeholder="Type a command…" />
+          <span class="kbd">⌘K</span>
+        </div>
+        <div class="cmdk-list" id="cmdkList"></div>
+      </div>
+    </div>
+
+    <script src="./app.js"></script>
+  </body>
+  </html>
+
+
